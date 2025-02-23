@@ -12,6 +12,8 @@ URL format:
 http://localhost:8080/{options}/{image_url}
 ```
 
+Options are specified in the format `{key}-{value}` and can be combined using underscores (`_`). For example, to set the width to 100 and the height to 200, you would use `w-100_h-200`.
+
 Options:
 
 - `w`: Width
@@ -28,6 +30,10 @@ Examples:
 - With options:
   ```
   http://localhost:8080/w-100_format-png/upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Francesco_Melzi_-_Portrait_of_Leonardo.png/220px-Francesco_Melzi_-_Portrait_of_Leonardo.png
+  ```
+- With multiple options:
+  ```
+  http://localhost:8080/w-100_h-200/upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Francesco_Melzi_-_Portrait_of_Leonardo.png/220px-Francesco_Melzi_-_Portrait_of_Leonardo.png
   ```
 - With disabled watermark:
   ```
