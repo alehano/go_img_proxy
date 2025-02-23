@@ -42,9 +42,9 @@ type Config struct {
 	WatermarkImg         string `long:"watermark-img" env:"WATERMARK_IMG" default:"logo.png" description:"Path to the watermark image"`
 	Opacity              int    `long:"opacity" env:"OPACITY" default:"50" description:"Opacity of the watermark (0-100)"`
 	Random               bool   `long:"random" env:"RANDOM" description:"Apply watermark at a random position"`
-	WatermarkSizePercent int    `long:"watermark-size-percent" env:"WATERMARK_SIZE_PERCENT" default:"20" description:"Size of the watermark as a percentage of the original image"`
-	OffsetXPercent       int    `long:"offset-x-percent" env:"OFFSET_X_PERCENT" default:"10" description:"X offset as a percentage of the image width"`
-	OffsetYPercent       int    `long:"offset-y-percent" env:"OFFSET_Y_PERCENT" default:"10" description:"Y offset as a percentage of the image height"`
+	WatermarkSizePercent int    `long:"watermark-size-percent" env:"WATERMARK_SIZE_PERCENT" default:"30" description:"Size of the watermark as a percentage of the original image"`
+	OffsetXPercent       int    `long:"offset-x-percent" env:"OFFSET_X_PERCENT" default:"5" description:"X offset as a percentage of the image width"`
+	OffsetYPercent       int    `long:"offset-y-percent" env:"OFFSET_Y_PERCENT" default:"5" description:"Y offset as a percentage of the image height"`
 	Position             string `long:"position" env:"POSITION" default:"bottomright" description:"Watermark position (topleft, topright, bottomleft, bottomright, center)"`
 	ForceWatermark       bool   `long:"force-watermark" env:"FORCE_WATERMARK" description:"Watermark cannot be disabled"`
 }
