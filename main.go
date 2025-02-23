@@ -36,7 +36,7 @@ const (
 )
 
 type Config struct {
-	Debug                bool   `long:"debug" env:"DEBUG" default:"false" description:"Enable debug mode"`
+	Debug                bool   `long:"debug" env:"DEBUG" description:"Enable debug mode"`
 	Quality              int    `long:"quality" env:"QUALITY" default:"85" description:"Quality of the JPEG image"`
 	Port                 int    `long:"port" env:"PORT" default:"8080" description:"Port to run the server on"`
 	WatermarkImg         string `long:"watermark-img" env:"WATERMARK_IMG" default:"logo.png" description:"Path to the watermark image"`
@@ -46,6 +46,7 @@ type Config struct {
 	OffsetXPercent       int    `long:"offset-x-percent" env:"OFFSET_X_PERCENT" default:"10" description:"X offset as a percentage of the image width"`
 	OffsetYPercent       int    `long:"offset-y-percent" env:"OFFSET_Y_PERCENT" default:"10" description:"Y offset as a percentage of the image height"`
 	Position             string `long:"position" env:"POSITION" default:"bottomright" description:"Watermark position (topleft, topright, bottomleft, bottomright, center)"`
+	ForceWatermark       bool   `long:"force-watermark" env:"FORCE_WATERMARK" description:"Watermark cannot be disabled"`
 }
 
 func parseConfig() (*Config, error) {
@@ -276,7 +277,7 @@ func processImage(w http.ResponseWriter, r *http.Request, cfg *Config) {
 	disableWatermark := present
 
 	// Apply watermark if watermark image path is set and 'nw' is not present
-	if cfg.WatermarkImg != "" && !disableWatermark {
+	if cfg.WatermarkImg != "" && (!disableWatermark || cfg.ForceWatermark) {
 		// Load the watermark image
 		watermarkImg, err := imgconv.Open(cfg.WatermarkImg)
 		if err != nil {
