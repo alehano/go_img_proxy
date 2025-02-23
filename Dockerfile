@@ -23,9 +23,6 @@ WORKDIR /app
 # Copy the built binary from the builder stage
 COPY --from=builder /app/bin/app .
 
-# Copy the configuration file
-COPY config.yml .
-
 # Expose the port the app runs on
 EXPOSE 8080
 
