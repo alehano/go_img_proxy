@@ -1,4 +1,4 @@
-module go_img_proxy
+module github.com/alehano/go_img_proxy
 
 go 1.22.1
 
