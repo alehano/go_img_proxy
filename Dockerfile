@@ -12,7 +12,7 @@ RUN go mod download
 COPY . .
 
 # Build the Go application
-RUN go build -o link-redirection-service main.go
+RUN go build -o app main.go
 
 # Use a minimal base image for the final container
 FROM alpine:latest
@@ -21,7 +21,7 @@ FROM alpine:latest
 WORKDIR /app
 
 # Copy the built binary from the builder stage
-COPY --from=builder /app/bin/app .
+COPY --from=builder /app/app .
 
 # Expose the port the app runs on
 EXPOSE 8080
