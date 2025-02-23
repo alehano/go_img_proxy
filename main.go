@@ -36,6 +36,7 @@ const (
 )
 
 type Config struct {
+	Debug                bool   `long:"debug" env:"DEBUG" default:"false" description:"Enable debug mode"`
 	Quality              int    `long:"quality" env:"QUALITY" default:"85" description:"Quality of the JPEG image"`
 	Port                 int    `long:"port" env:"PORT" default:"8080" description:"Port to run the server on"`
 	WatermarkImg         string `long:"watermark-img" env:"WATERMARK_IMG" default:"logo.png" description:"Path to the watermark image"`
@@ -160,7 +161,9 @@ func processImage(w http.ResponseWriter, r *http.Request, cfg *Config) {
 
 	// Reconstruct the image URL with query parameters
 	imageURL = parsedURL.Scheme + "://" + parsedURL.Host + parsedURL.Path + "?" + parsedURL.RawQuery
-	log.Printf("Fetching image from URL: %s", imageURL)
+	if cfg.Debug {
+		log.Printf("Fetching image from URL: %s", imageURL)
+	}
 
 	// Create a custom HTTP client with insecure SSL verification
 	client := &http.Client{
