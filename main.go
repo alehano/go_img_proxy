@@ -192,8 +192,56 @@ func processImage(w http.ResponseWriter, r *http.Request, cfg *Config) {
 	}
 	format := optionsMap["format"]
 
+	// Get the original image dimensions
+	originalBounds := img.Bounds()
+	originalWidth := originalBounds.Dx()
+	originalHeight := originalBounds.Dy()
+
+	// Use original dimensions if specified dimensions are too large
+	if width > originalWidth {
+		width = originalWidth
+	}
+	if height > originalHeight {
+		height = originalHeight
+	}
+
 	// Resize the image if width or height is specified
 	if width > 0 || height > 0 {
+		// Calculate the aspect ratio of the original image
+		originalAspectRatio := float64(originalWidth) / float64(originalHeight)
+
+		// If only one dimension is set, calculate the other to maintain the original aspect ratio
+		if width == 0 {
+			width = int(float64(height) * originalAspectRatio)
+		} else if height == 0 {
+			height = int(float64(width) / originalAspectRatio)
+		}
+
+		// Calculate the aspect ratio of the target dimensions
+		targetAspectRatio := float64(width) / float64(height)
+
+		if originalAspectRatio != targetAspectRatio {
+			// Calculate the crop rectangle
+			var cropRect image.Rectangle
+			if originalAspectRatio > targetAspectRatio {
+				// Wider than target, crop width
+				newWidth := int(float64(originalHeight) * targetAspectRatio)
+				x0 := (originalWidth - newWidth) / 2
+				cropRect = image.Rect(x0, 0, x0+newWidth, originalHeight)
+			} else {
+				// Taller than target, crop height
+				newHeight := int(float64(originalWidth) / targetAspectRatio)
+				y0 := (originalHeight - newHeight) / 2
+				cropRect = image.Rect(0, y0, originalWidth, y0+newHeight)
+			}
+
+			// Crop the image
+			img = img.(interface {
+				SubImage(r image.Rectangle) image.Image
+			}).SubImage(cropRect)
+		}
+
+		// Resize the image to the target dimensions
 		img = imgconv.Resize(img, &imgconv.ResizeOption{Width: width, Height: height})
 	}
 
@@ -283,17 +331,6 @@ func processImage(w http.ResponseWriter, r *http.Request, cfg *Config) {
 		http.Error(w, "Failed to encode image", http.StatusInternalServerError)
 		return
 	}
-}
-
-// Helper function to clamp values within a range
-func clamp(value, min, max int) int {
-	if value < min {
-		return min
-	}
-	if value > max {
-		return max
-	}
-	return value
 }
 
 func main() {
