@@ -197,10 +197,11 @@ func processImage(w http.ResponseWriter, r *http.Request, cfg *Config) {
 		img = imgconv.Resize(img, &imgconv.ResizeOption{Width: width, Height: height})
 	}
 
-	// Check if the 'nw' query parameter is set to disable watermark
-	disableWatermark := optionsMap["nw"] == "true"
+	// Check if the 'nw' query parameter is present to disable watermark
+	_, present := optionsMap["nw"]
+	disableWatermark := present
 
-	// Apply watermark if watermark image path is set and 'nw' is not true
+	// Apply watermark if watermark image path is set and 'nw' is not present
 	if cfg.WatermarkImg != "" && !disableWatermark {
 		// Load the watermark image
 		watermarkImg, err := imgconv.Open(cfg.WatermarkImg)
