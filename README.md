@@ -70,7 +70,7 @@ The server can be configured using command-line flags or environment variables:
 - `--quality` or `QUALITY`: Quality of the JPEG image. Default is `85`.
 - `--port` or `PORT`: Port to run the server on. Default is `8080`.
 - `--watermark-img` or `WATERMARK_IMG`: Path to the watermark image. Default is `logo.png`.
-- `--opacity` or `OPACITY`: Opacity of the watermark (0-255). Default is `128`.
+- `--opacity` or `OPACITY`: Opacity of the watermark (0-100). Default is `50`.
 - `--random` or `RANDOM`: Apply watermark at a random position.
 - `--watermark-size-percent` or `WATERMARK_SIZE_PERCENT`: Size of the watermark as a percentage of the original image. Default is `20`.
 - `--offset-x-percent` or `OFFSET_X_PERCENT`: X offset as a percentage of the image width. Default is `10`.

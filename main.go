@@ -40,7 +40,7 @@ type Config struct {
 	Quality              int    `long:"quality" env:"QUALITY" default:"85" description:"Quality of the JPEG image"`
 	Port                 int    `long:"port" env:"PORT" default:"8080" description:"Port to run the server on"`
 	WatermarkImg         string `long:"watermark-img" env:"WATERMARK_IMG" default:"logo.png" description:"Path to the watermark image"`
-	Opacity              int    `long:"opacity" env:"OPACITY" default:"128" description:"Opacity of the watermark (0-255)"`
+	Opacity              int    `long:"opacity" env:"OPACITY" default:"50" description:"Opacity of the watermark (0-100)"`
 	Random               bool   `long:"random" env:"RANDOM" description:"Apply watermark at a random position"`
 	WatermarkSizePercent int    `long:"watermark-size-percent" env:"WATERMARK_SIZE_PERCENT" default:"20" description:"Size of the watermark as a percentage of the original image"`
 	OffsetXPercent       int    `long:"offset-x-percent" env:"OFFSET_X_PERCENT" default:"10" description:"X offset as a percentage of the image width"`
@@ -308,7 +308,7 @@ func processImage(w http.ResponseWriter, r *http.Request, cfg *Config) {
 
 		watermarkOption := &imgconv.WatermarkOption{
 			Mark:    watermarkImg,
-			Opacity: uint8(cfg.Opacity), // Use configured opacity
+			Opacity: uint8(cfg.Opacity * 255 / 100), // Convert percentage to 0-255 scale
 		}
 
 		if cfg.Random {
