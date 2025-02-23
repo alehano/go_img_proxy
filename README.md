@@ -4,30 +4,22 @@
 
 This project is a Go-based image proxy server that allows you to manipulate images on-the-fly. You can resize, watermark, and apply various transformations to images by specifying options in the URL.
 
-## Installation
-
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   ```
-2. Navigate to the project directory:
-   ```bash
-   cd go_img_proxy
-   ```
-3. Build the project:
-   ```bash
-   go build
-   ```
-
 ## Usage
 
-Run the server:
+URL format:
 
-```bash
-./go_img_proxy
+```
+http://localhost:8080/{options}/{image_url}
 ```
 
-Access images with transformations:
+Options:
+
+- `w`: Width
+- `h`: Height
+- `format`: Format
+- `nw`: No watermark
+
+Examples:
 
 - Without options:
   ```
