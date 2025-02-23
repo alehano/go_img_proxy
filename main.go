@@ -20,6 +20,8 @@ import (
 
 	"crypto/tls"
 
+	"encoding/base64"
+
 	"github.com/jessevdk/go-flags"
 	"github.com/sunshineplan/imgconv"
 )
@@ -109,14 +111,35 @@ func parseOptions(options string) (map[string]string, error) {
 
 func processImage(w http.ResponseWriter, r *http.Request, cfg *Config) {
 	// Extract the path and split it to get options and URL
-	pathParts := strings.SplitN(r.URL.Path[1:], "/", 2)
-	if len(pathParts) != 2 {
+	pathParts := strings.SplitN(r.URL.Path[1:], "/", 3)
+	if len(pathParts) != 3 {
 		http.Error(w, "Invalid request format", http.StatusBadRequest)
 		return
 	}
 
 	options := pathParts[0]
-	imageURL := pathParts[1]
+	urlType := pathParts[1]
+	rawURL := pathParts[2]
+
+	var imageURL string
+	if urlType == "url" {
+		imageURL = rawURL
+	} else if urlType == "urlb" {
+		// Trim suffix after a dot before decoding
+		if dotIndex := strings.LastIndex(rawURL, "."); dotIndex != -1 {
+			rawURL = rawURL[:dotIndex]
+		}
+		// Decode base64 URL
+		decodedBytes, err := base64.URLEncoding.DecodeString(rawURL)
+		if err != nil {
+			http.Error(w, "Invalid base64 URL", http.StatusBadRequest)
+			return
+		}
+		imageURL = string(decodedBytes)
+	} else {
+		http.Error(w, "Invalid URL type", http.StatusBadRequest)
+		return
+	}
 
 	// Pre-process the image URL in case Chrome trimmed one slash
 	if strings.HasPrefix(imageURL, "http:/") && !strings.HasPrefix(imageURL, "http://") {
@@ -190,7 +213,7 @@ func processImage(w http.ResponseWriter, r *http.Request, cfg *Config) {
 	if err != nil {
 		quality = cfg.Quality
 	}
-	format := optionsMap["format"]
+	format := optionsMap["f"]
 
 	// Get the original image dimensions
 	originalBounds := img.Bounds()
