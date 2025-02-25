@@ -21,6 +21,7 @@ import (
 	"crypto/tls"
 
 	"encoding/base64"
+	"encoding/json"
 
 	"github.com/jessevdk/go-flags"
 	"github.com/sunshineplan/imgconv"
@@ -39,14 +40,21 @@ type Config struct {
 	Debug                bool   `long:"debug" env:"DEBUG" description:"Enable debug mode"`
 	Quality              int    `long:"quality" env:"QUALITY" default:"85" description:"Quality of the JPEG image"`
 	Port                 int    `long:"port" env:"PORT" default:"8080" description:"Port to run the server on"`
-	WatermarkImg         string `long:"watermark-img" env:"WATERMARK_IMG" default:"logo.png" description:"Path to the watermark image"`
-	Opacity              int    `long:"opacity" env:"OPACITY" default:"50" description:"Opacity of the watermark (0-100)"`
-	Random               bool   `long:"random" env:"RANDOM" description:"Apply watermark at a random position"`
-	WatermarkSizePercent int    `long:"watermark-size-percent" env:"WATERMARK_SIZE_PERCENT" default:"30" description:"Size of the watermark as a percentage of the original image"`
-	OffsetXPercent       int    `long:"offset-x-percent" env:"OFFSET_X_PERCENT" default:"5" description:"X offset as a percentage of the image width"`
-	OffsetYPercent       int    `long:"offset-y-percent" env:"OFFSET_Y_PERCENT" default:"5" description:"Y offset as a percentage of the image height"`
-	Position             string `long:"position" env:"POSITION" default:"bottomright" description:"Watermark position (topleft, topright, bottomleft, bottomright, center)"`
-	ForceWatermark       bool   `long:"force-watermark" env:"FORCE_WATERMARK" description:"Watermark cannot be disabled"`
+	WatermarksConfigFile string `long:"watermarks-config" env:"WATERMARKS_CONFIG_FILE" default:"watermarks.json" description:"Path to the watermarks config file"`
+}
+
+// New struct for WatermarkConfig
+// This struct will hold the watermark configuration for each project
+
+type WatermarkConfig struct {
+	Image          string
+	Opacity        int
+	SizePercent    int
+	OffsetXPercent int
+	OffsetYPercent int
+	Position       string
+	Force          bool
+	Random         bool
 }
 
 func parseConfig() (*Config, error) {
@@ -111,7 +119,25 @@ func parseOptions(options string) (map[string]string, error) {
 	return optionsMap, nil
 }
 
-func processImage(w http.ResponseWriter, r *http.Request, cfg *Config) {
+// Function to load watermark configurations from a JSON file
+func loadWatermarkConfigs(filePath string) (map[string]WatermarkConfig, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var configs map[string]WatermarkConfig
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&configs)
+	if err != nil {
+		return nil, err
+	}
+
+	return configs, nil
+}
+
+func processImage(w http.ResponseWriter, r *http.Request, cfg *Config, watermarkConfigs map[string]WatermarkConfig) {
 	// Extract the path and split it to get options and URL
 	pathParts := strings.SplitN(r.URL.Path[1:], "/", 3)
 	if len(pathParts) != 3 {
@@ -122,6 +148,25 @@ func processImage(w http.ResponseWriter, r *http.Request, cfg *Config) {
 	options := pathParts[0]
 	urlType := pathParts[1]
 	rawURL := pathParts[2]
+
+	// Parse options
+	optionsMap, err := parseOptions(options)
+	if err != nil {
+		http.Error(w, "Invalid options format", http.StatusBadRequest)
+		return
+	}
+
+	// Get the project from options, default to "default"
+	project := optionsMap["p"]
+	if project == "" {
+		project = "default"
+	}
+
+	// Get the watermark configuration for the project
+	watermarkConfig, exists := watermarkConfigs[project]
+	if !exists {
+		watermarkConfig = watermarkConfigs["default"]
+	}
 
 	var imageURL string
 	if urlType == "url" {
@@ -203,13 +248,6 @@ func processImage(w http.ResponseWriter, r *http.Request, cfg *Config) {
 		return
 	}
 
-	// Parse options
-	optionsMap, err := parseOptions(options)
-	if err != nil {
-		http.Error(w, "Invalid options format", http.StatusBadRequest)
-		return
-	}
-
 	// Process image parameters
 	width, _ := strconv.Atoi(optionsMap["w"])
 	height, _ := strconv.Atoi(optionsMap["h"])
@@ -277,18 +315,19 @@ func processImage(w http.ResponseWriter, r *http.Request, cfg *Config) {
 	disableWatermark := present
 
 	// Apply watermark if watermark image path is set and 'nw' is not present
-	if cfg.WatermarkImg != "" && (!disableWatermark || cfg.ForceWatermark) {
+	if watermarkConfig.Image != "" && (!disableWatermark || watermarkConfig.Force) {
 		// Load the watermark image
-		watermarkImg, err := imgconv.Open(cfg.WatermarkImg)
+		watermarkImg, err := imgconv.Open(watermarkConfig.Image)
 		if err != nil {
-			http.Error(w, "Failed to load watermark image", http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("Failed to load watermark image: %s", watermarkConfig.Image),
+				http.StatusInternalServerError)
 			return
 		}
 
 		// Resize the watermark based on the percentage of the original image
 		imgBounds := img.Bounds()
-		maxWatermarkWidth := imgBounds.Dx() * cfg.WatermarkSizePercent / 100
-		maxWatermarkHeight := imgBounds.Dy() * cfg.WatermarkSizePercent / 100
+		maxWatermarkWidth := imgBounds.Dx() * watermarkConfig.SizePercent / 100
+		maxWatermarkHeight := imgBounds.Dy() * watermarkConfig.SizePercent / 100
 
 		// Calculate the aspect ratio of the watermark
 		watermarkBounds := watermarkImg.Bounds()
@@ -308,16 +347,16 @@ func processImage(w http.ResponseWriter, r *http.Request, cfg *Config) {
 
 		watermarkOption := &imgconv.WatermarkOption{
 			Mark:    watermarkImg,
-			Opacity: uint8(cfg.Opacity * 255 / 100), // Convert percentage to 0-255 scale
+			Opacity: uint8(watermarkConfig.Opacity * 255 / 100), // Convert percentage to 0-255 scale
 		}
 
-		if cfg.Random {
+		if watermarkConfig.Random {
 			watermarkOption.SetRandom(true)
 		} else {
 			// Get position from query parameter or use config default
 			position := optionsMap["position"]
 			if position == "" {
-				position = cfg.Position
+				position = watermarkConfig.Position
 			}
 
 			// Calculate offsets based on position and percentage
@@ -328,8 +367,8 @@ func processImage(w http.ResponseWriter, r *http.Request, cfg *Config) {
 				imgBounds.Dy(),
 				watermarkBounds.Dx(),
 				watermarkBounds.Dy(),
-				cfg.OffsetXPercent,
-				cfg.OffsetYPercent,
+				watermarkConfig.OffsetXPercent,
+				watermarkConfig.OffsetYPercent,
 			)
 
 			watermarkOption.SetOffset(image.Pt(offsetX, offsetY))
@@ -366,8 +405,23 @@ func main() {
 		log.Fatalf("Failed to parse config: %v", err)
 	}
 
+	if cfg.Debug {
+		log.Printf("Config: %v", cfg)
+	}
+
+	// Load watermark configurations
+	watermarkConfigs, err := loadWatermarkConfigs(cfg.WatermarksConfigFile)
+	if err != nil {
+		log.Fatalf("Failed to load watermark configurations: %v", err)
+	}
+
+	if cfg.Debug {
+		log.Printf("Watermark configurations: %v", watermarkConfigs)
+	}
+
+	// Pass watermarkConfigs to the handler
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		processImage(w, r, cfg)
+		processImage(w, r, cfg, watermarkConfigs)
 	})
 
 	log.Printf("Starting server on :%d", cfg.Port)

@@ -1,0 +1,22 @@
+{
+  "default": {
+    "Image": "logo.png",
+    "Opacity": 50,
+    "SizePercent": 30,
+    "OffsetXPercent": 5,
+    "OffsetYPercent": 5,
+    "Position": "bottomright",
+    "Force": false,
+    "Random": false
+  },
+  "myproject": {
+    "Image": "myproject_logo.png",
+    "Opacity": 70,
+    "SizePercent": 40,
+    "OffsetXPercent": 10,
+    "OffsetYPercent": 10,
+    "Position": "topleft",
+    "Force": true,
+    "Random": false
+  }
+}

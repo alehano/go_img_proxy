@@ -35,6 +35,7 @@ Options:
 - `h`: Height
 - `f`: Format `jpg` or `png` (default is `jpg`)
 - `nw`: No watermark
+- `p`: Project key for selecting specific watermark configuration
 
 Examples:
 
@@ -69,13 +70,11 @@ The server can be configured using command-line flags or environment variables:
 
 - `--quality` or `QUALITY`: Quality of the JPEG image. Default is `85`.
 - `--port` or `PORT`: Port to run the server on. Default is `8080`.
-- `--watermark-img` or `WATERMARK_IMG`: Path to the watermark image. Default is `logo.png`.
-- `--opacity` or `OPACITY`: Opacity of the watermark (0-100). Default is `50`.
-- `--random` or `RANDOM`: Apply watermark at a random position.
-- `--watermark-size-percent` or `WATERMARK_SIZE_PERCENT`: Size of the watermark as a percentage of the original image. Default is `20`.
-- `--offset-x-percent` or `OFFSET_X_PERCENT`: X offset as a percentage of the image width. Default is `10`.
-- `--offset-y-percent` or `OFFSET_Y_PERCENT`: Y offset as a percentage of the image height. Default is `10`.
-- `--position` or `POSITION`: Watermark position (topleft, topright, bottomleft, bottomright, center). Default is `bottomright`.
+- `--watermarks-config` or `WATERMARKS_CONFIG_FILE`: Path to the watermarks config file. Default is `watermarks.json`.
+
+## Watermark Configuration
+
+Watermark configurations are stored in a JSON file specified by the `--watermarks-config` option. Each project can have its own configuration, and the project is selected using the `p` option in the URL. If no project is specified, the "default" configuration is used.
 
 ## Environment Variables
 
