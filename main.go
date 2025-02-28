@@ -23,6 +23,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 
+	"github.com/anthonynsimon/bild/adjust"
+	"github.com/anthonynsimon/bild/effect"
 	"github.com/jessevdk/go-flags"
 	"github.com/sunshineplan/imgconv"
 )
@@ -308,6 +310,78 @@ func processImage(w http.ResponseWriter, r *http.Request, cfg *Config, watermark
 
 		// Resize the image to the target dimensions
 		img = imgconv.Resize(img, &imgconv.ResizeOption{Width: width, Height: height})
+	}
+
+	// Apply image adjustments using bild library
+	// Brightness adjustment (-100 to 100)
+	if brightnessStr, ok := optionsMap["b"]; ok {
+		brightness, err := strconv.ParseFloat(brightnessStr, 64)
+		if err == nil {
+			// Convert from -100 to 100 scale to -1 to 1 scale used by bild
+			brightness = brightness / 100
+			img = adjust.Brightness(img, brightness)
+			if cfg.Debug {
+				log.Printf("Applied brightness adjustment: %f", brightness)
+			}
+		}
+	}
+
+	// Contrast adjustment (-100 to 100)
+	if contrastStr, ok := optionsMap["c"]; ok {
+		contrast, err := strconv.ParseFloat(contrastStr, 64)
+		if err == nil {
+			// Convert from -100 to 100 scale to -1 to 1 scale used by bild
+			contrast = contrast / 100
+			img = adjust.Contrast(img, contrast)
+			if cfg.Debug {
+				log.Printf("Applied contrast adjustment: %f", contrast)
+			}
+		}
+	}
+
+	// Gamma adjustment (0 to 10)
+	if gammaStr, ok := optionsMap["g"]; ok {
+		gamma, err := strconv.ParseFloat(gammaStr, 64)
+		if err == nil {
+			img = adjust.Gamma(img, gamma)
+			if cfg.Debug {
+				log.Printf("Applied gamma adjustment: %f", gamma)
+			}
+		}
+	}
+
+	// Hue adjustment (-360 to 360 degrees)
+	if hueStr, ok := optionsMap["h"]; ok {
+		hue, err := strconv.Atoi(hueStr)
+		if err == nil {
+			img = adjust.Hue(img, hue)
+			if cfg.Debug {
+				log.Printf("Applied hue adjustment: %d", hue)
+			}
+		}
+	}
+
+	// Saturation adjustment (-100 to 100)
+	if saturationStr, ok := optionsMap["s"]; ok {
+		saturation, err := strconv.ParseFloat(saturationStr, 64)
+		if err == nil {
+			// Convert from -100 to 100 scale to -1 to 1 scale used by bild
+			saturation = saturation / 100
+			img = adjust.Saturation(img, saturation)
+			if cfg.Debug {
+				log.Printf("Applied saturation adjustment: %f", saturation)
+			}
+		}
+	}
+
+	// Black and white conversion
+	if bwStr, ok := optionsMap["bw"]; ok {
+		if bwStr == "1" {
+			img = effect.Grayscale(img)
+			if cfg.Debug {
+				log.Printf("Applied black and white conversion")
+			}
+		}
 	}
 
 	// Check if the 'nw' query parameter is present to disable watermark
