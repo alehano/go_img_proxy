@@ -384,6 +384,16 @@ func processImage(w http.ResponseWriter, r *http.Request, cfg *Config, watermark
 		}
 	}
 
+	// Sharpen effect
+	if shrpStr, ok := optionsMap["shrp"]; ok {
+		if shrpStr == "1" {
+			img = effect.Sharpen(img)
+			if cfg.Debug {
+				log.Printf("Applied sharpen effect")
+			}
+		}
+	}
+
 	// Check if the 'nw' query parameter is present to disable watermark
 	_, present := optionsMap["nw"]
 	disableWatermark := present

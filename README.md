@@ -46,6 +46,7 @@ Options are specified in the format `{key}-{value}` and can be combined using un
 - `h`: Hue adjustment (-360 to 360 degrees)
 - `s`: Saturation adjustment (-100 to 100, where 0 is unchanged)
 - `bw`: Black and white conversion (set to 1 to enable)
+- `shrp`: Sharpen effect (set to 1 to enable)
 
 #### Watermark Options:
 
@@ -70,6 +71,10 @@ Examples:
 - Convert to black and white:
   ```
   http://localhost:8080/bw-1/url/upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Francesco_Melzi_-_Portrait_of_Leonardo.png/220px-Francesco_Melzi_-_Portrait_of_Leonardo.png
+  ```
+- Apply sharpen effect:
+  ```
+  http://localhost:8080/shrp-1/url/upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Francesco_Melzi_-_Portrait_of_Leonardo.png/220px-Francesco_Melzi_-_Portrait_of_Leonardo.png
   ```
 - With disabled watermark:
   ```
